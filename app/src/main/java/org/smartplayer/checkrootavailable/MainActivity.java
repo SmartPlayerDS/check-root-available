@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import java.io.BufferedReader;
 import java.io.EOFException;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -16,25 +17,57 @@ import java.io.OutputStreamWriter;
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = MainActivity.class.getSimpleName();
     private TextView textViewInfo;
+    /**
+     * The set of SU location
+     */
+    public static final String[] SU_BINARY_DIRS = {
+            "/system/bin", "/system/sbin", "/system/xbin",
+            "/vendor/bin", "/sbin"
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        textViewInfo = (TextView) findViewById(R.id.textInfo);
-        this.checkAvailableRoot();
+        textViewInfo = findViewById(R.id.textInfo);
+        this.checkAvailableRoot(this.hasSUFileOnFirmware());
     }
 
-    private void checkAvailableRoot() {
-        try {
-            Process proc = Runtime.getRuntime().exec("su");
-            OutputStreamWriter outputStream = new OutputStreamWriter(proc.getOutputStream(), "UTF-8");
-            BufferedReader inputStream = new BufferedReader(new InputStreamReader(proc.getInputStream(), "UTF-8"));
-            this.run(outputStream, inputStream);
-        } catch (IOException e) {
-            e.printStackTrace();
-            String stackTrace = Log.getStackTraceString(e);
-            this.showErrorRoot(stackTrace);
+    /**
+     * Check if the device is rooted
+     * <p>
+     * This function check if the system has SU file. Note that though SU file exits, it might not
+     * work.
+     * </p>
+     *
+     * @return this device is rooted or not.
+     */
+    public boolean hasSUFileOnFirmware() {
+        boolean hasRootedSuFile = false;
+        for (String path : MainActivity.SU_BINARY_DIRS) {
+            File su = new File(path + "/su");
+            if (su.exists()) {
+                hasRootedSuFile = true;
+                break;
+            }
+        }
+        return hasRootedSuFile;
+    }
+
+    private void checkAvailableRoot(boolean hasSUFileOnFirmware) {
+        if (hasSUFileOnFirmware) {
+            try {
+                Process proc = Runtime.getRuntime().exec("su");
+                OutputStreamWriter outputStream = new OutputStreamWriter(proc.getOutputStream(), "UTF-8");
+                BufferedReader inputStream = new BufferedReader(new InputStreamReader(proc.getInputStream(), "UTF-8"));
+                this.run(outputStream, inputStream);
+            } catch (IOException e) {
+                e.printStackTrace();
+                String stackTrace = Log.getStackTraceString(e);
+                this.showErrorRoot(stackTrace);
+            }
+        } else {
+            this.showErrorRoot("SU file doesn't exest");
         }
     }
 
@@ -68,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showAvailableRoot() {
         runOnUiThread(() -> {
-            String finalMsg = "Root available for applications";
+            String finalMsg = "Root shell available for applications";
             textViewInfo.setText(finalMsg);
             textViewInfo.setTextColor(Color.GREEN);
             textViewInfo.setTextSize(42f);
@@ -77,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void showErrorRoot(String errorMsg) {
         runOnUiThread(() -> {
-            String finalMsg = "Root unavailable for applications \n" + "errorMsg: " + errorMsg;
+            String finalMsg = "Root shell unavailable for applications \n" + "errorMsg: " + errorMsg;
             textViewInfo.setText(finalMsg);
             textViewInfo.setTextColor(Color.RED);
             textViewInfo.setTextSize(14f);
