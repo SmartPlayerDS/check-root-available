@@ -1,6 +1,9 @@
 plugins {
     id 'com.android.application'
 }
+def releaseProp = new Properties()
+releaseProp.load(new FileInputStream(rootProject.file("keystore/release_keystore.properties")))
+
 
 android {
     compileSdk 32
@@ -15,15 +18,35 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+
+        release {
+            keyAlias releaseProp['keyAlias']
+            keyPassword releaseProp['keyPassword']
+            storeFile file(releaseProp['storeFile'])
+            storePassword releaseProp['storePassword']
+        }
+
+    }
+
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+
         }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+    applicationVariants.all { variant ->
+        def buildTypeName = variant.buildType.name
+        variant.outputs.all { output ->
+            outputFileName = "CheckRootAvailable_${variant.versionName}_${buildTypeName}.apk"
+        }
     }
     buildToolsVersion buildToolsVersion
 }
