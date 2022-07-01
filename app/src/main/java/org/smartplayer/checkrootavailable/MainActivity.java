@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -12,7 +13,11 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = MainActivity.class.getSimpleName();
@@ -29,8 +34,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Log.d(TAG, "ProcessMyUID: " + android.os.Process.myUid());
         textViewInfo = findViewById(R.id.textInfo);
         this.checkAvailableRoot(this.hasSUFileOnFirmware());
+        this.takeScreenWithRoot();
+        this.takeScreenWithoutRootBySignAppFirmwareKey();
     }
 
     /**
@@ -77,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
             outputStream.flush();
             while (true) {
                 String line = inputStream.readLine();
+                Log.d(TAG, "#run. After read: " + line);
                 if (line == null) {
                     throw new EOFException();
                 }
@@ -115,5 +124,42 @@ public class MainActivity extends AppCompatActivity {
             textViewInfo.setTextColor(Color.RED);
             textViewInfo.setTextSize(14f);
         });
+    }
+
+    private void takeScreenWithRoot() {
+        try {
+            Date date = new Date();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US);
+            String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath();
+            String myPath = new File(path, "sp_check_root_" + dateFormat.format(date) + ".png").getAbsolutePath();
+            Process sh = Runtime.getRuntime().exec("su", null, null);
+            OutputStream os = sh.getOutputStream();
+            os.write(("screencap " + myPath).getBytes("ASCII"));
+            os.flush();
+            os.close();
+            BufferedReader errorStream = new BufferedReader(new InputStreamReader(sh.getErrorStream(), "UTF-8"));
+            String data;
+            while ((data = errorStream.readLine()) != null) {
+                Log.d(TAG, "Error sh: " + data);
+            }
+            Log.d(TAG, "TakeScreen ROOT finish, myPath: " + myPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void takeScreenWithoutRootBySignAppFirmwareKey() {
+        try {
+            Date date = new Date();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US);
+            String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath();
+            String myPath = new File(path, "sp_check_without_" + dateFormat.format(date) + ".png").getAbsolutePath();
+            Process process;
+            process = Runtime.getRuntime().exec("screencap -p " + myPath);
+            process.waitFor();
+            Log.d(TAG, "TakeScreen WITHOUT ROOT finish, myPath: " + myPath);
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 }
