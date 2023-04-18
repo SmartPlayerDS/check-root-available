@@ -16,4 +16,12 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <Button
+        android:id="@+id/btn_orientation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="onOpenOrientationTest"
+        android:text="Open Orientation Test"
+        tools:ignore="HardcodedText,MissingConstraints,UsingOnClickInXml" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

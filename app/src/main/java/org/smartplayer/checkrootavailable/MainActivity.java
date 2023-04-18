@@ -6,7 +6,9 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.EOFException;
@@ -161,5 +163,9 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public void onOpenOrientationTest(View v) {
+        Toast.makeText(this, "onOpenOrientationTest clicked", Toast.LENGTH_LONG).show();
     }
 }
