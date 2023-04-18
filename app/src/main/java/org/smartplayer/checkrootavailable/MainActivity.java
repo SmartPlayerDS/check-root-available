@@ -2,6 +2,7 @@ package org.smartplayer.checkrootavailable;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
@@ -167,5 +168,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void onOpenOrientationTest(View v) {
         Toast.makeText(this, "onOpenOrientationTest clicked", Toast.LENGTH_LONG).show();
+        startActivity(new Intent(this, OrientationTestActivity.class));
     }
 }
